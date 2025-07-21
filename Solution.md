@@ -36,11 +36,11 @@ SQL диаграмма устройство БД или flow chart
 2. Воркер `BrokerRateFetcherWorker` обрабатывает задачи:
     - Проверяет доступность брокера (`BrokerAvailabilityService` - вычисляет режимы и время работы с учетом всех заданных конфигов и возвращает в методе isAvailable  true/false)
     - Делает запрос к API
-    - `RatereResolver` - вычисляет `final_rate = raw_rate + markup` исходя из заданных конфигов.
+    - `RateResolver` - вычисляет `final_rate = raw_rate + markup` исходя из заданных конфигов.
     - Сохраняет или обновляет `exchange_rate` с `expires_at = now + 10 секунд`
-    - Рейты, которые не были обновлены или брокер не доступен - помечаются как inactive.
+    - Рейты, которые не были обновлены или брокер которых был недоступен - помечаются как inactive.
     - Failover: при ошибке - сообщение уходит в DLQ (для ручной обработки и/или сбора аналитики)
-    - Использовать RateLimiter для API брокеров, чтобы не выбить лимиты по кол-ву запросов.
+    - Можно использовать RateLimiter для контроля вызова API брокеров, чтобы не выбить лимиты по кол-ву запросов.
 ---
 
 #### Валидация и безопасность
@@ -60,14 +60,11 @@ SQL диаграмма устройство БД или flow chart
 ---
 
 ## Quote-логика
-#### Flowchart основных процессов - [https://github.com/natalsem/smgr_test/blob/main/ExchangeService_Flow.svg](https://raw.githubusercontent.com/natalsem/smgr_test/refs/heads/main/ExchangeService_Flow.svg)
+#### Flowchart основных процессов - https://github.com/natalsem/samegrid_test/blob/main/ExchangeService_Flow.svg
 
 ### Генерация:
-1. Фильтрация `exchange_rate` по:
-    - `base_currency`, `quote_currency`
-    - `expires_at > now()`
-2. Сортировка для выбора одной записи с лучшим соотношением для наценка сервиса/цена для клиента:
-    - `final_rate ASC, markup DESC`
+1. Фильтрация `exchange_rate` по: `base_currency`, `quote_currency`, `expires_at > now()`, `is_active`.
+    и сортировка для выбора одной записи с лучшим соотношением для наценка сервиса/цена для клиента `final_rate ASC, markup DESC`
 3. Генерация quote:
     - UUID + HMAC-подпись
     - Сохраняется в:
@@ -90,12 +87,12 @@ SQL диаграмма устройство БД или flow chart
 1. Фронт отправляет `quote_id` на бэкенд.
 2. Бэкенд
 - проверяет, что квота валида;
-- что квота принадлежит тому же пользователю, от которого получили запрос (проверка user_id, session_id)
-- (опционально) что курс акутален (expires_at)
+- что квота принадлежит тому же пользователю, от которого получили запрос (проверка user_id, session_id);
+- (опционально) что курс акутален (перепроверяем `expires_at` по `exchange_rate`);
 - Помещает deal_id в очередь Redis'a. 
 - Запись о сделке создается в таблице deal:
     - Статус `pending`, `is_active = false`, проставление `converted_at`
-    - Записываем сумму, валюту, курс, брокера, expires_at, created_at
+    - Записываем сумму, валюту, курс, брокера, expires_at, created_at.
 ---
 
 ## Обработка сделки (воркер `DealMessageProcessor`)
