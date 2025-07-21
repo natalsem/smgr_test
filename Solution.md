@@ -60,7 +60,7 @@ SQL диаграмма устройство БД или flow chart
 ---
 
 ## Quote-логика
-#### Flowchart основных процессов - https://github.com/natalsem/samegrid_test/blob/main/ExchangeService_Flow.svg
+#### Flowchart основных процессов - https://raw.githubusercontent.com/natalsem/smgr_test/refs/heads/main/ExchangeService_Flow.svg
 
 ### Генерация:
 1. Фильтрация `exchange_rate` по: `base_currency`, `quote_currency`, `expires_at > now()`, `is_active`.
