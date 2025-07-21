@@ -60,7 +60,7 @@ SQL диаграмма устройство БД или flow chart
 ---
 
 ## Quote-логика
-#### Flowchart основных процессов - https://www.mermaidchart.com/app/projects/cdd96fc5-73be-4813-a8c9-034ab11f5d59/diagrams/5570c117-0a19-4150-9e44-52a1157f53b9/version/v0.1/edit
+#### Flowchart основных процессов - https://github.com/natalsem/smgr_test/blob/main/ExchangeService_Flow.svg
 
 ### Генерация:
 1. Фильтрация `exchange_rate` по:
